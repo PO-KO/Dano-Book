@@ -10,12 +10,10 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
 @Entity
@@ -29,14 +27,7 @@ import jakarta.persistence.Table;
 public class Author {
 
     @Id
-    @SequenceGenerator(
-            name = "author_seq",
-            sequenceName = "author_seq"
-    )
-    @GeneratedValue(
-            strategy = GenerationType.SEQUENCE,
-            generator = "author"
-    )
+    @GeneratedValue
     private Long authorId;
     private String firstName;
     private String lastName;
@@ -47,8 +38,8 @@ public class Author {
     )
     @JoinTable(
             name = "author_book",
-            joinColumns = @JoinColumn(name = "author_id"),
-            inverseJoinColumns = @JoinColumn(name = "book_id")
+            joinColumns = @JoinColumn(name = "author_id", referencedColumnName = "authorId"),
+            inverseJoinColumns = @JoinColumn(name = "book_id", referencedColumnName = "bookId")
     )
     private Set<Book> books = new HashSet<>();
 

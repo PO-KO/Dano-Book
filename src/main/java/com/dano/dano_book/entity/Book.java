@@ -9,10 +9,8 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
 @Entity
@@ -26,20 +24,15 @@ import jakarta.persistence.Table;
 public class Book {
 
     @Id
-    @SequenceGenerator(
-            name = "book_seq",
-            sequenceName = "book_seq",
-            allocationSize = 1
-    )
-    @GeneratedValue(
-            strategy = GenerationType.SEQUENCE,
-            generator = "book_seq"
-    )
+    @GeneratedValue
     private Long bookId;
     private String title;
     private int release_year;
     private int pages;
     private double price;
+
+
+
     @ManyToMany(mappedBy = "books", cascade = CascadeType.ALL)
     private Set<Author> authors = new HashSet<>();
 
@@ -54,6 +47,21 @@ public class Book {
         this.price = price;
         this.authors = authors;
     }
+
+    public void addCourse(Author author) {
+        this.authors.add(author);
+        author.getBooks().add(this);
+    }
+    public void removeCourse(Author author) {
+        this.getAuthors().remove(author);
+        author.getBooks().remove(this);
+    }
+    public void removeCourses() {
+        for (Author author : new HashSet<>(authors)) {
+            removeCourse(author);
+        }
+    }
+
 
     public Long getBookId() {
         return bookId;
