@@ -1,19 +1,16 @@
 package com.dano.dano_book.service;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
+import com.dano.dano_book.DTO.*;
 import com.dano.dano_book.entity.Author;
 import com.dano.dano_book.repository.AuthorRepo;
+import com.dano.dano_book.utilities.CustomException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import com.dano.dano_book.DTO.RequestBookDTO;
-import com.dano.dano_book.DTO.ResponseAuthorWithoutBookDTO;
-import com.dano.dano_book.DTO.ResponseBookDTO;
 import com.dano.dano_book.entity.Book;
 import com.dano.dano_book.repository.BookRepo;
 
@@ -55,8 +52,9 @@ public class BookService {
 
     // Get all books
     @Transactional
-    public List<ResponseBookDTO> getAllBooks() {
+    public List<ResponseBookDTO> getAllBooks() throws CustomException {
         List<Book> books = bookRepo.findAll();
+        if(books.isEmpty()) throw new CustomException(HttpStatus.NOT_FOUND, "No books found");
         List<ResponseBookDTO> listResponseBookDTO = new ArrayList<>();
 
         books.forEach(book -> {
@@ -77,22 +75,69 @@ public class BookService {
 
     // update book
     @Transactional
-    public void updateBook(Long id, RequestBookDTO requestBookDTO) {
+    public void updateBook(Long id, RequestBookUpdateDTO requestBookUpdateDTO) throws CustomException {
 
-        boolean isExist = bookRepo.existsById(id);
+        if (id > 0) {
+            Book book = bookRepo.findById(id).orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "This book does not exist"));
+            if (requestBookUpdateDTO.title() != null) book.setTitle(requestBookUpdateDTO.title());
+            if (requestBookUpdateDTO.release_year() > 0) book.setRelease_year(requestBookUpdateDTO.release_year());
+            if (requestBookUpdateDTO.pages() > 0) book.setPages(requestBookUpdateDTO.pages());
+            if (requestBookUpdateDTO.price() > 0) book.setPrice(requestBookUpdateDTO.price());
+            if (!requestBookUpdateDTO.authors().isEmpty()) {
 
-        if (id > 0 && isExist) {
-            Book book = bookRepo.findById(id).get();
-            if (requestBookDTO.title() != null) book.setTitle(requestBookDTO.title());
-            if (requestBookDTO.release_year() > 0) book.setRelease_year(requestBookDTO.release_year());
-            if (requestBookDTO.pages() > 0) book.setPages(requestBookDTO.pages());
-            if (requestBookDTO.price() > 0) book.setPrice(requestBookDTO.price());
-            if (!requestBookDTO.authors().isEmpty()) {
-                if(!book.getAuthors().isEmpty()) book.removeCourses();
-                requestBookDTO.authors().forEach(author -> book.addCourse(author));
+                if(!book.getAuthors().isEmpty()) book.removeAuthors();
+                requestBookUpdateDTO.authors().forEach(author -> {
+                    if(authorRepo.existsById(author.getAuthorId())) {
+                        var existedAuth = authorRepo.findById(author.getAuthorId()).get();
+                        book.addAuthor(existedAuth);
+                    } else {
+                        book.addAuthor(author);
+                    }
+                });
             }
             bookRepo.save(book);
+        } else {
+            throw new CustomException(HttpStatus.BAD_REQUEST, "ID Invalid");
         }
+    }
+
+    @Transactional
+    public ResponseBookDTO getBookById(Long id) {
+        Book book = bookRepo.findById(id).orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "This book does not exist"));
+        Set<ResponseAuthorWithoutBookDTO> authors = new HashSet<>();
+
+        book.getAuthors().forEach(author -> {
+            authors.add(new ResponseAuthorWithoutBookDTO(
+                    author.getAuthorId(),
+                    author.getFirstName(),
+                    author.getLastName(),
+                    author.getBirthDate()
+            ));
+        });
+
+        return new ResponseBookDTO(
+                book.getBookId(),
+                book.getTitle(),
+                book.getRelease_year(),
+                book.getPages(),
+                book.getPrice(),
+                authors
+
+        );
+
+    }
+
+    @Transactional
+    public void deleteBookById(Long id) {
+
+        if (id > 0 && bookRepo.existsById(id)) {
+
+            bookRepo.deleteById(id);
+
+        } else {
+            throw new CustomException(HttpStatus.BAD_REQUEST, "Id is null or book does not exist");
+        }
+
     }
 
     @Transactional
@@ -102,7 +147,7 @@ public class BookService {
             Book book = bookRepo.findById(bookId).get();
             Author author = authorRepo.findById(authorId).get();
 
-            if(!book.getAuthors().isEmpty()) book.removeCourse(author);
+            if(!book.getAuthors().isEmpty()) book.removeAuthor(author);
 
         }
 
@@ -113,9 +158,30 @@ public class BookService {
         if(bookRepo.existsById(id)) {
             Book book = bookRepo.findById(id).get();
 
-            if(!book.getAuthors().isEmpty()) book.removeCourses();
+            if(!book.getAuthors().isEmpty()) book.removeAuthors();
 
         }
+
+    }
+
+    @Transactional
+    public List<ResponseBookDTO> searchBooks(String keyword) {
+        List<Book> books = bookRepo.searchBooks(keyword);
+        List<ResponseBookDTO> listResponseBookDTO = new ArrayList<>();
+
+        books.forEach(book -> {
+            Set<ResponseAuthorWithoutBookDTO> authors = new HashSet<>();
+            book.getAuthors().forEach(author -> authors.add(new ResponseAuthorWithoutBookDTO(author.getAuthorId(), author.getFirstName(), author.getLastName(), author.getBirthDate())));
+
+            listResponseBookDTO.add(new ResponseBookDTO(
+                    book.getBookId(),
+                    book.getTitle(),
+                    book.getRelease_year(),
+                    book.getPages(),
+                    book.getPrice(),
+                    authors));
+        });
+        return listResponseBookDTO;
 
     }
 }

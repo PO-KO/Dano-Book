@@ -53,6 +53,21 @@ public class Author {
         this.books = books;
     }
 
+    public void addBook(Book book) {
+        this.books.add(book);
+        book.getAuthors().add(this);
+    }
+
+    public void removeBook(Book book) {
+        this.getBooks().remove(book);
+        book.getAuthors().remove(this);
+    }
+    public void removeBooks() {
+        for (Book book : new HashSet<>(books)) {
+            removeBook(book);
+        }
+    }
+
     public Long getAuthorId() {
         return authorId;
     }

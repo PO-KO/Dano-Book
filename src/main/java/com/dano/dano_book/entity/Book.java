@@ -48,17 +48,17 @@ public class Book {
         this.authors = authors;
     }
 
-    public void addCourse(Author author) {
+    public void addAuthor(Author author) {
         this.authors.add(author);
         author.getBooks().add(this);
     }
-    public void removeCourse(Author author) {
+    public void removeAuthor(Author author) {
         this.getAuthors().remove(author);
         author.getBooks().remove(this);
     }
-    public void removeCourses() {
+    public void removeAuthors() {
         for (Author author : new HashSet<>(authors)) {
-            removeCourse(author);
+            removeAuthor(author);
         }
     }
 

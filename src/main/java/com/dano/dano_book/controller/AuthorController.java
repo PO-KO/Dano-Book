@@ -41,4 +41,12 @@ public class AuthorController {
         return "Created";
     }
 
+    @DeleteMapping("/{id}/delete")
+    public ResponseEntity<?> deleteAuthor(@PathVariable Long id) {
+
+        service.deleteAuthor(id);
+
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
 }

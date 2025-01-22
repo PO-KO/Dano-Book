@@ -2,18 +2,18 @@
 ### Author Controller
 - [x] Get all authors
 - [x] Add an author
-- [ ] Delete an author 
-- [ ] Update an author
-- [ ] Get an author
+- [x] Delete an author 
+- [x] Update an author
+- [x] Get an author
 - [ ] Search authors
 ### Book Controller
 - [x] Get all books
 - [x] Add a book
 - [x] Delete a book
 - [x] Update a book
-- [ ] Get a book
-- [ ] Delete an author from book
-- [ ] Delete authors from book
+- [x] Get a book
+- [x] Delete an author from book
+- [x] Delete authors from book
 - [ ] Search books
 
 ## Databases Structure
