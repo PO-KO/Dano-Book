@@ -1,11 +1,9 @@
 package com.dano.dano_book.controller;
 
-import java.util.Date;
 import java.util.List;
 
 import com.dano.dano_book.DTO.RequestBookUpdateDTO;
-import com.dano.dano_book.utilities.CustomException;
-import com.dano.dano_book.utilities.ErrorResponse;
+import com.dano.dano_book.utilities.CheckID;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,7 +20,7 @@ public class BookController {
 
 
     private BookService service;
-
+    private final CheckID checkID = new CheckID();
     public BookController() {
     }
 
@@ -38,48 +36,58 @@ public class BookController {
     }
 
     @PostMapping("/add")
-    public String addBook(@RequestBody @Valid RequestBookDTO request) {
+    public ResponseEntity<?> addBook(@RequestBody @Valid RequestBookDTO request) {
 
         service.addBook(request);
 
-        return "Created";
+        return new ResponseEntity<>(request, HttpStatus.CREATED);
     }
 
     @PatchMapping("/{id}/update")
-    public String updateBook(@PathVariable Long id, @RequestBody RequestBookUpdateDTO request) {
+    public ResponseEntity<String> updateBook(
+            @PathVariable
+            Long id,
+            @RequestBody
+            @Valid
+            RequestBookUpdateDTO request) {
+        checkID.checkId(id);
         service.updateBook(id, request);
-        return "Updated!";
+        return new ResponseEntity<>("Book " + id + " Updated successfully", HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ResponseBookDTO> getBookById(@PathVariable Long id) {
+
+        checkID.checkId(id);
 
         ResponseBookDTO response = service.getBookById(id);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @DeleteMapping("/{id}")
-    public String deleteBookById(@PathVariable Long id) {
+    @DeleteMapping("/{id}/delete")
+    public ResponseEntity<String> deleteBookById(@PathVariable Long id) {
+        checkID.checkId(id);
         service.deleteBookById(id);
 
-        return "Deleted";
+        return new ResponseEntity<>("Book " + id + "deleted successfully", HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}/delete/authors")
-    public String deleteAuthorsFromBook(@PathVariable Long id) {
-
+    public ResponseEntity<String> deleteAuthorsFromBook(@PathVariable Long id) {
+        checkID.checkId(id);
         service.deleteAuthorsFromBook(id);
 
-        return "Deleted!";
+        return new ResponseEntity<>("Authors from book " + id + " deleted successfully", HttpStatus.OK);
     }
 
     @DeleteMapping("/{bookId}/delete/authors/{authorId}")
-    public String deleteAuthorsFromBook(@PathVariable Long bookId, @PathVariable Long authorId) {
-
+    public ResponseEntity<String> deleteAuthorsFromBook(@PathVariable Long bookId, @PathVariable Long authorId) {
+        checkID.checkId(bookId);
+        checkID.checkId(authorId);
         service.deleteAuthorFromBook(bookId, authorId);
 
-        return "Deleted!";
+        return new ResponseEntity<>("Author " + authorId + " from book " + bookId + " deleted successfully", HttpStatus.OK);
     }
 
     @GetMapping("/search")
@@ -88,10 +96,5 @@ public class BookController {
         return new ResponseEntity<>(listResponseBookDTO, HttpStatus.OK);
     }
 
-    @ExceptionHandler(CustomException.class)
-    public ResponseEntity<ErrorResponse> handleCustomException(CustomException ex) {
-        ErrorResponse errorResponse = new ErrorResponse(new Date(), ex.getMessage(), ex.getStatus().value());
-        return new ResponseEntity<>(errorResponse, ex.getStatus());
-    }
 
 }

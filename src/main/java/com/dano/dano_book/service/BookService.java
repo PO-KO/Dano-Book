@@ -52,7 +52,7 @@ public class BookService {
 
     // Get all books
     @Transactional
-    public List<ResponseBookDTO> getAllBooks() throws CustomException {
+    public List<ResponseBookDTO> getAllBooks() {
         List<Book> books = bookRepo.findAll();
         if(books.isEmpty()) throw new CustomException(HttpStatus.NOT_FOUND, "No books found");
         List<ResponseBookDTO> listResponseBookDTO = new ArrayList<>();
@@ -75,15 +75,13 @@ public class BookService {
 
     // update book
     @Transactional
-    public void updateBook(Long id, RequestBookUpdateDTO requestBookUpdateDTO) throws CustomException {
-
-        if (id > 0) {
+    public void updateBook(Long id, RequestBookUpdateDTO requestBookUpdateDTO) {
             Book book = bookRepo.findById(id).orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "This book does not exist"));
             if (requestBookUpdateDTO.title() != null) book.setTitle(requestBookUpdateDTO.title());
             if (requestBookUpdateDTO.release_year() > 0) book.setRelease_year(requestBookUpdateDTO.release_year());
             if (requestBookUpdateDTO.pages() > 0) book.setPages(requestBookUpdateDTO.pages());
             if (requestBookUpdateDTO.price() > 0) book.setPrice(requestBookUpdateDTO.price());
-            if (!requestBookUpdateDTO.authors().isEmpty()) {
+            if (requestBookUpdateDTO.authors() != null && !requestBookUpdateDTO.authors().isEmpty()) {
 
                 if(!book.getAuthors().isEmpty()) book.removeAuthors();
                 requestBookUpdateDTO.authors().forEach(author -> {
@@ -96,9 +94,6 @@ public class BookService {
                 });
             }
             bookRepo.save(book);
-        } else {
-            throw new CustomException(HttpStatus.BAD_REQUEST, "ID Invalid");
-        }
     }
 
     @Transactional
@@ -130,37 +125,41 @@ public class BookService {
     @Transactional
     public void deleteBookById(Long id) {
 
-        if (id > 0 && bookRepo.existsById(id)) {
+        if (bookRepo.existsById(id)) {
 
             bookRepo.deleteById(id);
 
         } else {
-            throw new CustomException(HttpStatus.BAD_REQUEST, "Id is null or book does not exist");
+            throw new CustomException(HttpStatus.NOT_FOUND, "Book does not exist");
         }
 
     }
 
     @Transactional
     public void deleteAuthorFromBook(Long bookId, Long authorId) {
+            Book book = bookRepo.findById(bookId).orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "Book does not exist"));
+            Author author = authorRepo.findById(authorId).orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "Author does not exist for removing"));
 
-        if(bookRepo.existsById(bookId) && authorRepo.existsById(authorId)) {
-            Book book = bookRepo.findById(bookId).get();
-            Author author = authorRepo.findById(authorId).get();
+            if(!book.getAuthors().isEmpty()) {
+                book.removeAuthor(author);
+            } else {
+                throw new CustomException(HttpStatus.NOT_FOUND, "Author(s) in book is empty");
+            }
 
-            if(!book.getAuthors().isEmpty()) book.removeAuthor(author);
-
-        }
 
     }
 
     @Transactional
     public void deleteAuthorsFromBook(Long id) {
-        if(bookRepo.existsById(id)) {
-            Book book = bookRepo.findById(id).get();
+        Book book = bookRepo.findById(id).orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "Book does not exist"));
 
-            if(!book.getAuthors().isEmpty()) book.removeAuthors();
-
+        if(!book.getAuthors().isEmpty()) {
+            book.removeAuthors();
+        } else {
+            throw new CustomException(HttpStatus.NOT_FOUND, "Author(s) in book is empty");
         }
+
+
 
     }
 

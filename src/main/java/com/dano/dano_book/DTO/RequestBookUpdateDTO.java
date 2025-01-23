@@ -6,7 +6,7 @@ import jakarta.validation.constraints.*;
 import java.util.Set;
 
 public record RequestBookUpdateDTO(
-        @Max(50)
+        @Size(max = 50)
         String title,
         int release_year,
         int pages,

@@ -1,13 +1,12 @@
 package com.dano.dano_book.service;
 
-import com.dano.dano_book.DTO.ResponseAuthorDTO;
-import com.dano.dano_book.DTO.ResponseAuthorWithoutBookDTO;
-import com.dano.dano_book.DTO.ResponseBookWithoutAuthor;
+import com.dano.dano_book.DTO.*;
+import com.dano.dano_book.utilities.CustomException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import com.dano.dano_book.DTO.RequestAuthorDTO;
 import com.dano.dano_book.entity.Author;
 import com.dano.dano_book.repository.AuthorRepo;
 import com.dano.dano_book.repository.BookRepo;
@@ -39,6 +38,7 @@ public class AuthorService {
 
     public List<ResponseAuthorDTO> getAuthors() {
         List<Author> authors = repo.findAll();
+        if(authors.isEmpty()) throw new CustomException(HttpStatus.NOT_FOUND, "No authors found");
         List<ResponseAuthorDTO> responseAuthorListDTO = new ArrayList<>();
 
         authors.forEach(author -> {
@@ -70,28 +70,33 @@ public class AuthorService {
 
         if(repo.existsById(id)) {
             repo.deleteById(id);
-        } else throw new IllegalArgumentException("This Author does not exist");
+        } else throw new CustomException(HttpStatus.NOT_FOUND, "This Author does not exist");
 
     }
 
     @Transactional
-    public void updateAuthor(Long id, RequestAuthorDTO authorDTO) {
-        if(id > 0 && repo.existsById(id)) {
-            Author author = repo.findById(id).get();
+    public void updateAuthor(Long id, RequestAuthorUpdateDTO authorDTO) {
+            Author author = repo.findById(id).orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "This author does not exist"));
             if(authorDTO.firstName() != null) author.setFirstName(authorDTO.firstName());
             if(authorDTO.lastName() != null) author.setLastName(authorDTO.lastName());
             if(authorDTO.birthDate() != null) author.setBirthDate(authorDTO.birthDate());
             if(!authorDTO.books().isEmpty()) {
                 if(!author.getBooks().isEmpty()) author.removeBooks();
-                authorDTO.books().forEach(author::addBook);
+                authorDTO.books().forEach(book -> {
+                    if(bookRepo.existsById(book.getBookId())) {
+                        var existedBook = bookRepo.findById(book.getBookId()).get();
+                        author.addBook(existedBook);
+                    } else {
+                        author.addBook(book);
+                    }
+                });
             }
-            Author save = repo.save(author);
-        } else throw new IllegalArgumentException("Id is null or author no exists");
+            repo.save(author);
     }
 
     @Transactional
     public ResponseAuthorDTO getAuthorById(Long id) {
-        Author author = repo.findById(id).orElseThrow();
+        Author author = repo.findById(id).orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "This author does not exist"));
         Set<ResponseBookWithoutAuthor> books = new HashSet<>();
 
         author.getBooks().forEach(book -> {
