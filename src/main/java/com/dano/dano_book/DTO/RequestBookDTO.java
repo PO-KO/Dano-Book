@@ -7,7 +7,7 @@ import jakarta.validation.constraints.*;
 
 public record RequestBookDTO(
         @NotBlank
-        @Max(50)
+        @Size(max = 50)
         String title,
         @NotBlank
         @Positive

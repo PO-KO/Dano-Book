@@ -5,6 +5,7 @@ import com.dano.dano_book.DTO.ResponseAuthorDTO;
 import com.dano.dano_book.entity.Author;
 import com.dano.dano_book.utilities.CheckID;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,19 +18,12 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/authors")
+@RequiredArgsConstructor
 public class AuthorController {
 
-    private AuthorService service;
+    private final AuthorService service;
     private final CheckID checkID = new CheckID();
 
-    public AuthorController() {
-
-   }
-
-    @Autowired
-    public AuthorController(AuthorService service) {
-        this.service = service;
-    }
 
     @GetMapping
     public ResponseEntity<List<ResponseAuthorDTO>> getAuthors() {

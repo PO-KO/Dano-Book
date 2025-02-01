@@ -2,32 +2,34 @@ package com.dano.dano_book.controller;
 
 import java.util.List;
 
-import com.dano.dano_book.DTO.RequestBookUpdateDTO;
-import com.dano.dano_book.utilities.CheckID;
-import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.dano.dano_book.DTO.RequestBookDTO;
+import com.dano.dano_book.DTO.RequestBookUpdateDTO;
 import com.dano.dano_book.DTO.ResponseBookDTO;
 import com.dano.dano_book.service.BookService;
+import com.dano.dano_book.utilities.CheckID;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/books")
+@RequiredArgsConstructor
 public class BookController {
 
-
-    private BookService service;
+    private final BookService service;
     private final CheckID checkID = new CheckID();
-    public BookController() {
-    }
-
-    @Autowired
-    public BookController(BookService service) {
-        this.service = service;
-    }
 
     @GetMapping
     public ResponseEntity<?> getAllBooks() {
@@ -45,11 +47,9 @@ public class BookController {
 
     @PatchMapping("/{id}/update")
     public ResponseEntity<String> updateBook(
-            @PathVariable
-            Long id,
+            @PathVariable Long id,
             @RequestBody
-            @Valid
-            RequestBookUpdateDTO request) {
+            @Valid RequestBookUpdateDTO request) {
         checkID.checkId(id);
         service.updateBook(id, request);
         return new ResponseEntity<>("Book " + id + " Updated successfully", HttpStatus.OK);
@@ -95,6 +95,5 @@ public class BookController {
         List<ResponseBookDTO> listResponseBookDTO = service.searchBooks(keyword);
         return new ResponseEntity<>(listResponseBookDTO, HttpStatus.OK);
     }
-
 
 }

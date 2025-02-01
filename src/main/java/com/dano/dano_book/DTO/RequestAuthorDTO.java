@@ -4,19 +4,17 @@ import java.util.Date;
 import java.util.Set;
 
 import com.dano.dano_book.entity.Book;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Past;
+import jakarta.validation.constraints.*;
 
 public record RequestAuthorDTO(
         @NotBlank
-        @Max(20)
+        @Size(max = 20)
         String firstName,
         @NotBlank
-        @Max(20)
+        @Size(max = 20)
         String lastName,
-        @NotBlank
         @Past
+        @NotNull
         Date birthDate,
         Set<Book> books) {
 

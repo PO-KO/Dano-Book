@@ -3,6 +3,7 @@ package com.dano.dano_book.service;
 import com.dano.dano_book.DTO.*;
 import com.dano.dano_book.utilities.CustomException;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -17,12 +18,11 @@ import java.util.List;
 import java.util.Set;
 
 @Service
+@RequiredArgsConstructor
 public class AuthorService {
 
-    @Autowired
-    private AuthorRepo repo;
-    @Autowired
-    private BookRepo bookRepo;
+    private final AuthorRepo repo;
+    private final BookRepo bookRepo;
 
     @Transactional
     public void addAuthor(RequestAuthorDTO requestAuthorDTO) {
@@ -30,8 +30,10 @@ public class AuthorService {
         author.setFirstName(requestAuthorDTO.firstName());
         author.setLastName(requestAuthorDTO.lastName());
         author.setBirthDate(requestAuthorDTO.birthDate());
+        if(requestAuthorDTO.books() != null) {
         requestAuthorDTO.books().forEach(book -> book.getAuthors().add(author));
         author.setBooks(requestAuthorDTO.books());
+        }
 
         repo.save(author);
     }
